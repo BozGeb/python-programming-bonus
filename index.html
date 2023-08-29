@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copy Code Button</title>
+<style>
+  #code-container {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+</style>
+</head>
+<body>
+<div id="code-container">
+  <pre><code id="python-code">
+import platform
+import psutil
+import platform
+import psutil
+import tkinter as tk
+from tkinter import ttk
+import winreg
+
+def get_system_info():
+    system_info = {}
+
+    system_info["Operating System"] = platform.system()
+    system_info["Operating System Version"] = platform.release()
+
+    if system_info["Operating System"] == "Windows":
+        system_info["System Type"] = platform.architecture()[0]
+    else:
+        system_info["System Architecture"] = platform.architecture()[0]
+
+    partitions = psutil.disk_partitions()
+    disk_info = []
+    for partition in partitions:
+        usage = psutil.disk_usage(partition.mountpoint)
+        disk_info.append({
+            "Device": partition.device,
+            "Mount Point": partition.mountpoint,
+            "File System": partition.fstype,
+            "Total Size": usage.total,
+            "Used": usage.used,
+            "Free": usage.free,
+            "Usage Percentage": usage.percent
+        })
+    system_info["Disk Information"] = disk_info
+
+    return system_info
+
+def get_installed_apps():
+    apps = []
+    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Uninstall") as key:
+        for i in range(winreg.QueryInfoKey(key)[0]):
+            try:
+                subkey_name = winreg.EnumKey(key, i)
+                with winreg.OpenKey(key, subkey_name) as subkey:
+                    app_name = winreg.QueryValueEx(subkey, "DisplayName")[0]
+                    apps.append(app_name)
+            except Exception:
+                pass
+    return apps
+
+def display_system_info():
+    system_info = get_system_info()
+    installed_apps = get_installed_apps()
+
+    root = tk.Tk()
+    root.title("System Information")
+
+    # Create a notebook with tabs
+    notebook = ttk.Notebook(root)
+    
+    # Tab 1: System Information
+    tab_system = ttk.Frame(notebook)
+    notebook.add(tab_system, text="System Info")
+
+    tree_system = ttk.Treeview(tab_system)
+    tree_system["columns"] = ("Value")
+    tree_system.heading("#0", text="Category")
+    tree_system.heading("Value", text="Value")
+
+    for category, info in system_info.items():
+        category_item = tree_system.insert("", "end", text=category, values=(""))
+        if isinstance(info, list):
+            for item in info:
+                for key, value in item.items():
+                    tree_system.insert(category_item, "end", text=key, values=(value))
+        else:
+            tree_system.insert(category_item, "end", text=info)
+
+    tree_system.pack(expand=True, fill=tk.BOTH)
+
+    # Tab 2: Installed Applications
+    tab_apps = ttk.Frame(notebook)
+    notebook.add(tab_apps, text="Installed Apps")
+
+    listbox_apps = tk.Listbox(tab_apps)
+    for app in installed_apps:
+        listbox_apps.insert(tk.END, app)
+    listbox_apps.pack(expand=True, fill=tk.BOTH)
+
+    notebook.pack(expand=True, fill=tk.BOTH)
+    root.mainloop()
+
+if __name__ == "__main__":
+    display_system_info()
+display_system_info()
+  </code></pre>
+  <button id="copy-button">Copy Code</button>
+</div>
+<script>
+document.getElementById('copy-button').addEventListener('click', function() {
+  const codeElement = document.getElementById('python-code');
+  const codeText = codeElement.textContent;
+  
+  const textarea = document.createElement('textarea');
+  textarea.value = codeText;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  
+  alert('Code copied to clipboard!');
+});
+</script>
+</body>
+</html>
